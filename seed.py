@@ -92,5 +92,5 @@ if __name__ == "__main__":
     # Import different types of data
     load_users()
     load_movies()
-    #load_ratings()
+    load_ratings()
     set_val_user_id()
