@@ -2,7 +2,7 @@
 
 from sqlalchemy import func
 from model import User
-# from model import Rating
+from model import Rating
 from model import Movie
 from datetime import datetime
 
@@ -18,6 +18,7 @@ def load_users():
     # Delete all rows in table, so if we need to run this a second time,
     # we won't be trying to add duplicate users
     User.query.delete()
+    print 'users deleted'
 
     # Read u.user file and insert data
     for row in open("seed_data/u.user"):
@@ -42,10 +43,11 @@ def load_movies():
 
     for row in open('seed_data/u.item'):
         row =  row.rstrip()
-        row = row.split("|")
+        movie_id, title, released_at, blank, imdb_url = row.split("|")[:5]
 
-        movie = Movie(movie_id = row[0], title = row[1],
-                released_at = row[2], imdb_url = row[4])
+        movie = Movie(movie_id = movie_id, title = title[:-6].decode("latin-1").rstrip(),
+                released_at = datetime.strptime(released_at, '%d-%b-%Y'),
+                imdb_url = imdb_url)
 
         db.session.add(movie)
     
@@ -54,6 +56,18 @@ def load_movies():
 
 def load_ratings():
     """Load ratings from u.data into database."""
+
+    Rating.query.delete()
+
+    for row in open("seed_data/u.data"):
+        row = row.rstrip()
+        user_id, movie_id, score, timestamp = row.split("\t")
+
+        rating = Rating(movie_id=movie_id, user_id=user_id, score=score)
+
+        db.session.add(rating)
+
+    db.session.commit()
 
 
 def set_val_user_id():
@@ -78,5 +92,5 @@ if __name__ == "__main__":
     # Import different types of data
     load_users()
     load_movies()
-    load_ratings()
+    #load_ratings()
     set_val_user_id()
