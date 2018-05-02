@@ -6,6 +6,7 @@ from flask import (Flask, render_template, redirect, request, flash, session, ur
 from flask_debugtoolbar import DebugToolbarExtension
 
 from model import User, Rating, Movie, connect_to_db, db
+from sqlalchemy import update
 
 
 app = Flask(__name__)
@@ -33,6 +34,14 @@ def user_list():
     users = User.query.all()
     return render_template("user_list.html", users=users)
 
+@app.route("/movies")
+def movie_list():
+    """Show list of movies."""
+
+    movies = Movie.query.order_by(Movie.title).all()
+
+    return render_template("movie_list.html", movies=movies)
+
 
 @app.route("/users/<int:user_id>")
 def user_info(user_id):
@@ -40,7 +49,46 @@ def user_info(user_id):
 
     user = User.query.get(user_id)
 
+    #user = db.session.query(User).options(db.joinedload(User.user_id).joinedload(Rating.movie_id)).first()
+
     return render_template("user_info.html", user=user)
+
+@app.route("/movies/<title>")
+def movie_info(title):
+    """Show user information."""
+
+    movie = Movie.query.filter(Movie.title == title).first()
+    session["movie_id"] = movie.movie_id
+
+    #user = db.session.query(User).options(db.joinedload(User.user_id).joinedload(Rating.movie_id)).first()
+
+    return render_template("movie_info.html", movie=movie)
+
+@app.route("/rate_movie/<title>")
+def rate_movie(title):
+    
+    return render_template("rate_form.html", title=title)
+
+@app.route("/rate_movie/<title>", methods=["POST"])
+def process_rating(title):
+    #if rating exists, update existing rating
+    #else add new rating
+
+    new_score = int(request.form.get("score"))
+
+    if session:
+
+        rating = Rating(movie_id=session["movie_id"], user_id=session["user_id"], score=new_score)
+        db.session.add(rating)
+        db.session.commit()
+
+        #user_ratings = Rating.query.filter(Rating.user_id==session["user_id"], Movie.title == title).all()
+
+
+    return "ok"
+
+
+
 
 
 @app.route("/register", methods=["GET"])
