@@ -9,7 +9,19 @@
 <h2>Users</h2>
 <p><a href="/users">View all users</a></p>
 
-<h2><a href="/register">Register here!</a></h2>
-<h2><a href="/login">Login here!</a></h2>
+<form action="/register">
+	<input type="submit" value="Register">
+</form>
+<br>
+{% if session %}
+<form action="/logout">
+	<input type="submit" value="Logout">
+</form>
+
+{% else %}
+<form action="/login">
+	<input type="submit" value="Login">
+</form>
+{% endif %}
 
 {% endblock %}

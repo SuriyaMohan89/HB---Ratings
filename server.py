@@ -2,7 +2,7 @@
 
 from jinja2 import StrictUndefined
 
-from flask import (Flask, render_template, redirect, request, flash, session)
+from flask import (Flask, render_template, redirect, request, flash, session, url_for)
 from flask_debugtoolbar import DebugToolbarExtension
 
 from model import User, Rating, Movie, connect_to_db, db
@@ -34,6 +34,15 @@ def user_list():
     return render_template("user_list.html", users=users)
 
 
+@app.route("/users/<int:user_id>")
+def user_info(user_id):
+    """Show user information."""
+
+    user = User.query.get(user_id)
+
+    return render_template("user_info.html", user=user)
+
+
 @app.route("/register", methods=["GET"])
 def register_form():
     """Show user registration form."""
@@ -46,11 +55,15 @@ def register_process():
     email = request.form.get("email")
     password = request.form.get("password")
 
-    if User.query.filter(User.email != email):
+    if not User.query.filter(User.email == email).first():
         user = User(email=email, password=password)
 
         db.session.add(user)
         db.session.commit()
+        flash("Successfully Registered")
+
+    else:
+        flash("Email already registered. Please Login")
 
     return redirect('/')
 
@@ -58,8 +71,6 @@ def register_process():
 @app.route('/login',methods=["GET"])
 def login_form():
     """Show Login page"""
-    if session:
-        flash("Successfully logged in!")
 
     return render_template("login_form.html")
 
@@ -68,19 +79,16 @@ def login_form():
 def login_process():
     """Processes user Login form"""
 
-
     email = request.form.get("email")
     password = request.form.get("password")
 
     user = User.query.filter((User.email == email) & (User.password == password)).first()
 
-   # print "USER ID: " + user.user_id
-
-    if user.email == email and user.password == password:
-        print "USER EXISTS"
+    if user:
         session["user_id"] = user.user_id
+        flash("Successfully logged in!")
 
-        return redirect('/')
+        return redirect(url_for('user_info', user_id=user.user_id))
 
     else:
         flash("Login details incorrect!")
@@ -88,7 +96,14 @@ def login_process():
         return redirect('/login')
 
 
+@app.route('/logout')
+def logout():
+    """Log out the user."""
 
+    session.pop("user_id", None)
+    flash("You've been logged out!")
+    
+    return redirect('/')
 
 
 if __name__ == "__main__":
