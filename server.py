@@ -46,35 +46,28 @@ def movie_list():
 @app.route("/users/<int:user_id>")
 def user_info(user_id):
     """Show user information."""
-    user = User.query.options(db.joinedload("ratings"),
-                              db.joinedload("ratings.movie")).first()
+    user = User.query.options(db.joinedload("ratings.movie")).first()
     
     return render_template("user_info.html", user=user)
 
-@app.route("/movies/<title>")
-def movie_info(title):
+@app.route("/movies/<int:movie_id>")
+def movie_info(movie_id):
     """Show user information."""
 
-    movie = Movie.query.filter(Movie.title == title).first()
-    session["movie_id"] = movie.movie_id
+    movie = Movie.query.get(movie_id)
 
     return render_template("movie_info.html", movie=movie)
 
-@app.route("/rate_movie/<title>")
-def rate_movie(title):
-    
-    return render_template("rate_form.html", title=title)
-
-@app.route("/rate_movie/<title>", methods=["POST"])
-def process_rating(title):
+@app.route("/rate_movie/<int:movie_id>", methods=["POST"])
+def process_rating(movie_id):
 
     new_score = int(request.form.get("score"))
 
     rating_score = Rating.query.filter(Rating.user_id==session["user_id"],
-                                       Rating.movie_id==session["movie_id"]).first()
+                                       Rating.movie_id== movie_id).first()
 
     if not rating_score:
-        rating = Rating(movie_id=session["movie_id"], user_id=session["user_id"], score=new_score)
+        rating = Rating(movie_id= movie_id, user_id=session["user_id"], score=new_score)
         db.session.add(rating)
         
     else:
@@ -82,9 +75,7 @@ def process_rating(title):
         
     db.session.commit()
 
-    return redirect(url_for('movie_info', title=title))
-
-
+    return redirect(url_for('movie_info', movie_id = movie_id))
 
 
 @app.route("/register", methods=["GET"])
