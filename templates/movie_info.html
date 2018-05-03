@@ -17,7 +17,7 @@
 {% endfor %}
 </ul>
 {% if session %}
-<form action="/rate_movie/{{ movie.title }}">
+<form action="/rate_movie/{{ movie.movie_id }}">
 	<input type="submit" value="Add Rating">
 </form>
 {% endif %}
